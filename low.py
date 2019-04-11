@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 '''low.py, send and recieve link layer frames via
 the Berkely Packet Filter (BPF).
 
@@ -12,13 +14,11 @@ from os import read, write, open, O_RDWR
 
 
 
-# The constants below are ioctl codes as shown
-# in the net/bpf.h header file.
+# Stop everything being imported by programs.
 
-# Used to set whether a BPF device should block
-# on reading from a buffer or zero memory copy.
+__all__ = ['socket']
 
-NONBLOCK = 0x80044270
+
 
 # Used to bind a BPF to a network interface or
 # force said interface into promiscuous mode.
@@ -34,58 +34,94 @@ GBLEN = 0x40044266
 
 
 
+# Convert the string name of an interface to the
+# specific structure used by BPFs.
+
+def ifname(name):
+    coded = name.encode()
+
+    struct = pack('16s16x', coded)
+
+    return struct
+
+
+
+# Open a BPF device file and return the file 
+# descriptor if sucessfull.
+
+def bpf(number):
+    path = f'/dev/bpf{number}'
+
+    try:
+        fd = open(path, O_RDWR)
+
+        return fd
+
+    except:
+        return -1
+
+
+
+# Encapsulates BPF functions for networking.
+
 class socket:
-    # Bind the BPF device to a given network
-    # interface.
+    def __init__(self):
+        pass    
 
-    def bind(self, name):
-        # Convert interface name to ioctl format.
+    # Use a certain BPF device given its number.
 
-        ifname = name.encode()
-        iface = pack('16s16x', ifname)
+    def use(self, number):
+        self.fd = bpf(number)
 
-        ioctl(self.bpf, BIND, iface)
+        # Return whether opened successfully.
 
-    # Set whether the BPF device should block
-    # when reading.
+        return self.fd > -1
 
-    def nonblock(self, state):
-        ioctl(self.bpf, NONBLOCK, state)
-
-        # Set the buffer length accordingly.
-
-        length = pack('I', 1)
-        ioctl(self.bpf, SBLEN, length)
-
-    # Transmit a frame via the interface.
-
-    def send(self, frame):
-        write(self.bpf, frame)
-
-    # Open a new BPF device to use.
+    # Search for the first available BPF. There's
+    # usually 256 possible device files.
 
     def open(self):
-        for n in range(256):
+        number = 0
 
-            # Try to open each BPF until
-            # until successfull (or not).
+        while number < 256:
+            opened = self.use(number)
 
-            try:
-                path = f'/dev/bpf{n}'
-                bpf = open(path, O_RDWR)
-            
-            except:
-                continue
+            if opened:
+                return True
 
-            # Remember the descriptor if opened
-            # successfully.
+            number += 1
 
-            self.bpf = bpf
+        return False
 
-            return bpf
-
-    # Close an open BPF, also unbinding the
-    # interface if bound.
+    # Close an open BPF, the self.bpf descriptor.
 
     def close(self):
-        close(self.bpf)
+        close(self.fd)
+
+    # Send a frame over the bound network medium.
+
+    def send(self, frame):
+        size = write(self.fd, frame)
+
+        return size
+
+    # Recieve frames from the network medium.
+
+    def recv(self, size):
+        pass
+
+    # Perform the IOCTL system call on the BPF
+    # device in use.
+
+    def call(self, action, arg):
+        ioctl(self.fd, action, arg)
+
+    # Associate an open BPF with a given network
+    # interface, e.g a WiFi card.
+ 
+    def bind(self, name):
+        iface = ifname(name)
+
+        # An IOCTL call is needed for this oof.
+
+        self.call(BIND, iface)
