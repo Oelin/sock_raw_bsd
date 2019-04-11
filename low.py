@@ -1,10 +1,7 @@
 #!/usr/bin/env python3
 
 '''low.py, send and recieve link layer frames via
-the Berkely Packet Filter (BPF).
-
-This library defines an abstraction of ioctls for
-BPF devices, remeniscent of standard sockets.'''
+the Berkely Packet Filter (BPF).'''
 
 
 
