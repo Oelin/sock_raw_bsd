@@ -31,8 +31,12 @@ PROMISC = 0x20004269
 # Used to set and get the buffer length on an
 # open BPF.
 
-SBLEN = 0xc0044266
-GBLEN = 0x40044266
+SETSIZE= 0xc0044266
+GETSIZE = 0x40044266
+
+# The default buffer length for a BPF device.
+
+MTU = 4096
 
 # Used to set whether a BPF device should block
 # or not when reading.
@@ -41,9 +45,7 @@ NOBLOCK = 0x80044270
 
 
 
-# The default buffer length for a BPF device.
-
-MTU = 4096
+# Misc functions regarding bytes and stuff.
 
 
 
@@ -75,19 +77,25 @@ def bpf(number):
 
 
 
-# This class emulates regular sockets yet
-# interfaces with the network via a BPF.
+# Convert an integer to bytes. This may come in
+# more useful in future versions.
+
+def itob(int):
+    return pack('i', int)
+
+
+
+# This class emulates regular sockets however,
+# uses BPF devices.
 
 class socket:
     def __init__(self):
         pass
 
-    # Use a certain BPF device given its number.
+    # Use a certain BPF device by its number.
 
     def use(self, number):
         self.fd = bpf(number)
-
-        # Return whether opened successfully.
 
         return self.fd > -1
 
@@ -107,12 +115,12 @@ class socket:
 
         return False
 
-    # Close an open BPF, the self.bpf descriptor.
+    # Close an open BPF, the self.bpf handle.
 
     def close(self):
         close(self.fd)
 
-    # Send a frame over the bound network medium.
+    # Send a frame over the network medium.
 
     def send(self, frame):
         size = write(self.fd, frame)
@@ -121,16 +129,24 @@ class socket:
 
     # Recieve frames from the network medium.
 
-    def recv(self, size):
-        pass
+    def recv(self):
+        frame = read(self.fd, self.getsize)
+
+        return frame
 
     # Perform the IOCTL system call on the BPF
     # device in use.
 
     def call(self, action, arg):
+        # If the argument is an integer, pack it 
+        # to bytes.
+
+        if type(arg) is int:
+            arg = itob(arg)
+
         ioctl(self.fd, action, arg)
 
-    # Associate an open BPF with a given network
+    # Associate an open BPF with a network
     # interface, e.g a WiFi card.
  
     def bind(self, name):
@@ -139,5 +155,21 @@ class socket:
         # An IOCTL call is needed for this oof.
 
         self.call(BIND, iface)
-        
-   # Set whether the BPF should block when
+
+    # Change the BPF device's read buffer size.
+
+    def setsize(self, size):
+        self.call(SETSIZE, size)
+
+    # Return the BPF device's buffer size.
+
+    @property
+
+    def getsize(self):
+        pass
+
+    # Set whether the BPF device should block
+    # when reading.
+
+   def noblock(self, truth):
+       self.call(NOBLOCK, int(truth))
