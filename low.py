@@ -7,7 +7,7 @@ the Berkely Packet Filter (BPF).'''
 
 from struct import pack, unpack
 from fcntl import ioctl
-from os import read, write, open, O_RDWR
+from os import read, write, open, close, O_RDWR
 
 
 
@@ -17,7 +17,12 @@ __all__ = ['socket']
 
 
 
-# Used to bind a BPF to a network interface or
+# Constants defined in the BPF header file. The
+# names have been altered to reduce obscurity.
+
+
+
+# Used to bind a BPF to a network interface and
 # force said interface into promiscuous mode.
 
 BIND = 0x8020426c
@@ -28,6 +33,17 @@ PROMISC = 0x20004269
 
 SBLEN = 0xc0044266
 GBLEN = 0x40044266
+
+# Used to set whether a BPF device should block
+# or not when reading.
+
+NOBLOCK = 0x80044270
+
+
+
+# The default buffer length for a BPF device.
+
+MTU = 4096
 
 
 
@@ -59,11 +75,12 @@ def bpf(number):
 
 
 
-# Encapsulates BPF functions for networking.
+# This class emulates regular sockets yet
+# interfaces with the network via a BPF.
 
 class socket:
     def __init__(self):
-        pass    
+        pass
 
     # Use a certain BPF device given its number.
 
@@ -122,3 +139,5 @@ class socket:
         # An IOCTL call is needed for this oof.
 
         self.call(BIND, iface)
+        
+   # Set whether the BPF should block when
