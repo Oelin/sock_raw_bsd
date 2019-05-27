@@ -31,7 +31,7 @@ PROMISC = 0x20004269
 # Used to set and get the buffer length on an
 # open BPF.
 
-SETSIZE= 0xc0044266
+SETSIZE = 0xc0044266
 GETSIZE = 0x40044266
 
 # The default buffer length for a BPF device.
