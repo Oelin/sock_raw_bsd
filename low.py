@@ -43,19 +43,24 @@ MTU = 4096
 
 NOBLOCK = 0x80044270
 
+# The byte format for the ifreq structure. 16 
+# bytes of padding placed at the end.
+
+IFREQ = '16s16x'
+
 
 
 # Misc functions regarding bytes and stuff.
 
 
 
-# Convert the string name of an interface to the
-# specific structure used by BPFs.
+# Convert the string name of an interface to an
+# IFREQ name.
 
 def ifname(name):
     coded = name.encode()
 
-    struct = pack('16s16x', coded)
+    struct = pack(IFREQ, coded)
 
     return struct
 
