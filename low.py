@@ -176,5 +176,5 @@ class socket:
     # Set whether the BPF device should block
     # when reading.
 
-   def noblock(self, truth):
-       self.call(NOBLOCK, int(truth))
+    def noblock(self, truth):
+        self.call(NOBLOCK, int(truth))
