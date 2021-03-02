@@ -1,124 +1,46 @@
 #!/usr/bin/env python3
 
-'''low.py, send and recieve link layer frames via
-the Berkely Packet Filter (BPF).'''
-
-
-
 from struct import pack, unpack
 from fcntl import ioctl
 from os import read, write, open, close, O_RDWR
 
 
-
-# Stop everything being imported by programs.
-
 __all__ = ['socket']
 
 
-
-# Constants defined in the BPF header file. The
-# names have been altered to reduce obscurity.
-
-
-
-# Used to bind a BPF to a network interface and
-# force said interface into promiscuous mode.
-
 BIND = 0x8020426c
 PROMISC = 0x20004269
-
-# Used to set and get the buffer length on an
-# open BPF.
-
 SETSIZE = 0xc0044266
 GETSIZE = 0x40044266
-
-# The default buffer length for a BPF device.
-
-MTU = 4096
-
-# Used to set whether a BPF device should block
-# or not when reading.
-
 NOBLOCK = 0x80044270
-
-# The byte format for the ifreq structure. 16 
-# bytes of padding placed at the end.
-
+MTU = 4096
 IFREQ = '16s16x'
 
 
-
-# Misc functions regarding bytes and stuff.
-
-
-
-# Convert the string name of an interface to an
-# IFREQ name.
+# convert the name of an interface to an IFREQ structure.
 
 def ifname(name):
-    coded = name.encode()
-
-    struct = pack(IFREQ, coded)
-
-    return struct
+    return pack(IFREQ, name.encode())
 
 
+# open a BPF device
 
-# Open a BPF device file and return the file 
-# descriptor if sucessfull.
-
-def bpf(number):
-    path = f'/dev/bpf{number}'
-
+def open_bpf(number):
     try:
-        fd = open(path, O_RDWR)
-
-        return fd
-
+        return open(f'/def/bpf{number}, O_RDWR)
     except:
-        return -1
-
-
-
-# Convert an integer to bytes. This may come in
-# more useful in future versions.
-
-def itob(int):
-    return pack('i', int)
-
-
-
-# This class emulates regular sockets however,
-# uses BPF devices.
-
-class socket:
-    def __init__(self):
         pass
 
-    # Use a certain BPF device by its number.
 
-    def use(self, number):
-        self.fd = bpf(number)
-
-        return self.fd > -1
-
-    # Search for the first available BPF. There's
-    # usually 256 possible device files.
-
+class socket:  
+                    
     def open(self):
-        number = 0
-
-        while number < 256:
-            opened = self.use(number)
-
-            if opened:
-                return True
-
-            number += 1
-
-        return False
+        for n in range(256):
+            self.fd = open_bpf(n)
+                    
+            if self.fd != None:
+              return True
+        
 
     # Close an open BPF, the self.bpf handle.
 
@@ -147,7 +69,7 @@ class socket:
         # to bytes.
 
         if type(arg) is int:
-            arg = itob(arg)
+            arg = pack('i', arg)
 
         ioctl(self.fd, action, arg)
 
