@@ -8,6 +8,7 @@ from os import read, write, open, close, O_RDWR
 __all__ = ['socket']
 
 
+# https://www.cs.ubc.ca/~bestchai/teaching/cs416_2015w2/go1.4.3-docs/pkg/syscall/index.html
 BIND = 0x8020426c
 PROMISC = 0x20004269
 SETSIZE = 0xc0044266
