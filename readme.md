@@ -1,3 +1,3 @@
-# sock_raw_bsd
+# rawsocket
 
-Send and recieve link layer frames via the Berkely Packet Filter (BPF). This provides `SOCK_RAW` functionality on BSD based systems like Mac OS.
+Send and recieve link layer frames via the Berkely Packet Filter (BPF) interface. This provides `SOCK_RAW` functionality on BSD based systems including Mac OS.
